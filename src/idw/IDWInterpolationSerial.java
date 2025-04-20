@@ -8,6 +8,8 @@ import java.util.Locale;
 public class IDWInterpolationSerial {
 	private static final String FILE = "./data/measurements.txt";
 
+	private static final int POWER = 2;
+
 	public record Point(int x, int y, double value) {
 	}
 
@@ -55,7 +57,7 @@ public class IDWInterpolationSerial {
 
 		Point point = new Point(x, y, -1);
 
-		double idw = calculateInverseDistanceWeighting(mapPoints, 2, point);
+		double idw = calculateInverseDistanceWeighting(mapPoints, POWER, point);
 
 		System.out.println("IDW: " + String.format(Locale.US, "%.1f", idw));
 	}
