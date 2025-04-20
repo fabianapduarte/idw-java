@@ -3,6 +3,7 @@ package idw;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 public class IDWInterpolationSerial {
 	private static final String FILE = "./data/measurements.txt";
@@ -56,6 +57,6 @@ public class IDWInterpolationSerial {
 
 		double idw = calculateInverseDistanceWeighting(mapPoints, 2, point);
 
-		System.out.println("IDW: " + idw);
+		System.out.println("IDW: " + String.format(Locale.US, "%.1f", idw));
 	}
 }
