@@ -1,0 +1,52 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Current File",
+      "request": "launch",
+      "mainClass": "${file}"
+    },
+    {
+      "type": "java",
+      "name": "IDWInterpolationSerial",
+      "request": "launch",
+      "mainClass": "idw/idw.IDWInterpolationSerial",
+      "projectName": "idw",
+      "args": ["5", "8"],
+      "console": "internalConsole",
+      "vmArgs": "-Xmx3072m -XX:StartFlightRecording=duration=90s,filename=profiler/idw-serial.jfr"
+    },
+    {
+      "type": "java",
+      "name": "IDWInterpolationV1",
+      "request": "launch",
+      "mainClass": "idw/idw.IDWInterpolationV1",
+      "projectName": "idw",
+      "args": ["5", "8"],
+      "console": "internalConsole",
+      "vmArgs": "-XX:StartFlightRecording=duration=90s,filename=profiler/idw-v1.jfr"
+    },
+    {
+      "type": "java",
+      "name": "IDWInterpolationV2",
+      "request": "launch",
+      "mainClass": "idw/idw.IDWInterpolationV2",
+      "projectName": "idw",
+      "args": ["5", "8"],
+      "console": "internalConsole",
+      "vmArgs": "-XX:StartFlightRecording=duration=90s,filename=profiler/idw-v2.jfr"
+    },
+    {
+      "type": "java",
+      "name": "GenerateData",
+      "request": "launch",
+      "mainClass": "idw/utils.GenerateData",
+      "projectName": "idw",
+      "console": "internalConsole"
+    }
+  ]
+}
