@@ -24,7 +24,7 @@ public class IDWInterpolationV1 {
 
   static class IDW {
     private double numerator, weights;
-    private Point point;
+    private final Point point;
 
     public IDW(Point point) {
       super();
@@ -47,7 +47,6 @@ public class IDWInterpolationV1 {
           setWeights(getWeights() + weight);
         }
       }
-
     }
 
     public double getIDW() {
@@ -72,7 +71,7 @@ public class IDWInterpolationV1 {
   }
 
   public static List<FileSegment> getFileSegment(FileChannel fileChannel, RandomAccessFile raf,
-      int numberOfThreads) throws IOException {
+                                                 int numberOfThreads) throws IOException {
     long fileSize = fileChannel.size();
     long chunkSize = fileSize / numberOfThreads;
     long lastLocation = 0;
@@ -107,7 +106,19 @@ public class IDWInterpolationV1 {
     return segments;
   }
 
+  public static void processLine(StringBuilder line, IDW idwCalculator) {
+    int endNumber1 = line.indexOf(",");
+    int endNumber2 = line.indexOf(",", endNumber1 + 1);
+    int lineX = Integer.parseInt(line.substring(0, endNumber1));
+    int lineY = Integer.parseInt(line.substring(endNumber1 + 1, endNumber2));
+    double lineValue = Double.parseDouble(line.substring(endNumber2 + 1));
+    Point pointReaded = new Point(lineX, lineY);
+
+    idwCalculator.calculateIDW(pointReaded, lineValue);
+  }
+
   public static void main(String[] args) throws IOException, InterruptedException {
+    long start = System.currentTimeMillis();
     int x = 0, y = 0;
     int numberOfThreads = Runtime.getRuntime().availableProcessors();
     final CountDownLatch controller = new CountDownLatch(numberOfThreads);
@@ -128,10 +139,9 @@ public class IDWInterpolationV1 {
       IDW idwCalculator = new IDW(point);
 
       segments.forEach(segment -> {
-        MappedByteBuffer buffer;
         try {
-          buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(),
-              segment.end() - segment.start());
+          MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(),
+                  segment.end() - segment.start());
           Runnable runnable = new Runnable() {
             public void run() {
               StringBuilder lineBuilder = new StringBuilder();
@@ -140,15 +150,7 @@ public class IDWInterpolationV1 {
                 char c = (char) buffer.get();
 
                 if (c == '\n') {
-                  int endNumber1 = lineBuilder.indexOf(",");
-                  int endNumber2 = lineBuilder.indexOf(",", endNumber1 + 1);
-                  int lineX = Integer.parseInt(lineBuilder.substring(0, endNumber1));
-                  int lineY = Integer.parseInt(lineBuilder.substring(endNumber1 + 1, endNumber2));
-                  double lineValue = Double.parseDouble(lineBuilder.substring(endNumber2 + 1));
-                  Point pointReaded = new Point(lineX, lineY);
-
-                  idwCalculator.calculateIDW(pointReaded, lineValue);
-
+                  processLine(lineBuilder, idwCalculator);
                   lineBuilder.delete(0, lineBuilder.length());
                 } else {
                   lineBuilder.append(c);
@@ -169,6 +171,10 @@ public class IDWInterpolationV1 {
       double idw = idwCalculator.getIDW();
 
       System.out.println("IDW: " + String.format(Locale.US, "%.1f", idw));
+
+      long end = System.currentTimeMillis();
+      long time = (end - start) / 1000;
+      System.out.println("Executed in " + time + "s.");
     }
   }
 }
