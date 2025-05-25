@@ -6,7 +6,6 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
 // Versão 1: Platform threads
@@ -17,61 +16,46 @@ public class IDWInterpolationV1 {
   private static final int POWER = 2;
 
   public record Point(int x, int y) {
+    public boolean equalsTo(Point otherPoint) {
+      return this.x == otherPoint.x && this.y == otherPoint.y;
+    }
+
+    public double distanceTo(Point otherPoint) {
+      double dx = this.x - otherPoint.x;
+      double dy = this.y - otherPoint.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
   }
 
   public record FileSegment(long start, long end) {
   }
 
   static class IDW {
-    private double numerator, weights;
+    private double numerator = 0.0, weights = 0.0;
     private final Point point;
 
     public IDW(Point point) {
       super();
       this.point = point;
-      this.setNumerator(0);
-      this.setWeights(0);
-    }
-
-    public double getDistance(Point p, Point q) {
-      return Math.hypot(p.x() - q.x(), p.y() - q.y());
     }
 
     public void calculateIDW(Point pointReaded, double valueReaded) {
-      double distance = getDistance(pointReaded, this.point);
+      double distance = this.point.distanceTo(pointReaded);
+      double weight = 1.0 / Math.pow(distance, POWER);
 
-      if (distance != 0.0) {
-        double weight = 1.0 / Math.pow(distance, POWER);
-        synchronized (this) {
-          setNumerator(getNumerator() + (valueReaded * weight));
-          setWeights(getWeights() + weight);
-        }
+      synchronized (this) {
+        this.numerator += (valueReaded * weight);
+        this.weights += weight;
       }
     }
 
     public double getIDW() {
-      return getNumerator() / getWeights();
-    }
-
-    public double getNumerator() {
-      return numerator;
-    }
-
-    public void setNumerator(double numerator) {
-      this.numerator = numerator;
-    }
-
-    public double getWeights() {
-      return weights;
-    }
-
-    public void setWeights(double weights) {
-      this.weights = weights;
+      return this.numerator / this.weights;
     }
   }
 
   public static List<FileSegment> getFileSegment(FileChannel fileChannel, RandomAccessFile raf,
-                                                 int numberOfThreads) throws IOException {
+      int numberOfThreads) throws IOException {
     long fileSize = fileChannel.size();
     long chunkSize = fileSize / numberOfThreads;
     long lastLocation = 0;
@@ -141,7 +125,7 @@ public class IDWInterpolationV1 {
       segments.forEach(segment -> {
         try {
           MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(),
-                  segment.end() - segment.start());
+              segment.end() - segment.start());
           Runnable runnable = new Runnable() {
             public void run() {
               StringBuilder lineBuilder = new StringBuilder();
@@ -168,13 +152,14 @@ public class IDWInterpolationV1 {
       });
 
       controller.await();
-      double idw = idwCalculator.getIDW();
 
-      System.out.println("IDW: " + String.format(Locale.US, "%.1f", idw));
+      double idw = idwCalculator.getIDW();
+      System.out.println("IDW: " + String.format("%.1f", idw).replace(',', '.'));
 
       long end = System.currentTimeMillis();
       long time = (end - start) / 1000;
       System.out.println("Executed in " + time + "s.");
+      System.exit(0);
     }
   }
 }
