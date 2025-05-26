@@ -10,9 +10,9 @@ import java.util.concurrent.CountDownLatch;
 import records.FileSegment;
 import records.Point;
 
-// Versão 2: Paralelismo com virtual threads
+// Versão 3: Paralelismo com platform threads e locks
 
-public class IDWInterpolationV2 {
+public class IDWInterpolationV3 {
   private static final String FILE = "./data/measurements.txt";
 
   private static final int POWER = 2;
@@ -30,11 +30,10 @@ public class IDWInterpolationV2 {
       double distance = this.point.distanceTo(pointReaded);
       double weight = 1.0 / Math.pow(distance, POWER);
 
-      /////////////////////////////////////////
-      // REGIÃO CRÍTICA
-      this.numerator += (valueReaded * weight);
-      this.weights += weight;
-      /////////////////////////////////////////
+      synchronized (this) {
+        this.numerator += (valueReaded * weight);
+        this.weights += weight;
+      }
     }
 
     public double getIDW() {
@@ -98,7 +97,7 @@ public class IDWInterpolationV2 {
     try {
       x = Integer.parseInt(args[0]);
       y = Integer.parseInt(args[1]);
-    } catch (NumberFormatException e) {
+    } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
       System.out.println("Coordenadas inválidas.");
       System.exit(1);
     }
@@ -111,7 +110,6 @@ public class IDWInterpolationV2 {
       IDW idwCalculator = new IDW(point);
 
       segments.forEach(segment -> {
-        int segmentIndex = segments.indexOf(segment);
         try {
           MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(),
               segment.end() - segment.start());
@@ -133,7 +131,8 @@ public class IDWInterpolationV2 {
               controller.countDown();
             }
           };
-          Thread.ofVirtual().name("Thread " + segmentIndex).start(runnable);
+          Thread thread = new Thread(runnable);
+          thread.start();
         } catch (IOException e) {
           e.printStackTrace();
         }

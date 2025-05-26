@@ -10,7 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import records.FileSegment;
 import records.Point;
 
-// Versão 1: Platform threads
+// Versão 1: Paralelismo com platform threads
 
 public class IDWInterpolationV1 {
   private static final String FILE = "./data/measurements.txt";
@@ -30,10 +30,11 @@ public class IDWInterpolationV1 {
       double distance = this.point.distanceTo(pointReaded);
       double weight = 1.0 / Math.pow(distance, POWER);
 
-      synchronized (this) {
-        this.numerator += (valueReaded * weight);
-        this.weights += weight;
-      }
+      /////////////////////////////////////////
+      // REGIÃO CRÍTICA
+      this.numerator += (valueReaded * weight);
+      this.weights += weight;
+      /////////////////////////////////////////
     }
 
     public double getIDW() {
