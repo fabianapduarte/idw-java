@@ -6,169 +6,147 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
+import records.FileSegment;
+import records.Point;
 
 // Versão 2: Virtual threads
 
 public class IDWInterpolationV2 {
-	private static final String FILE = "./data/measurements.txt";
+  private static final String FILE = "./data/measurements.txt";
 
-	private static final int POWER = 2;
+  private static final int POWER = 2;
 
-	public record Point(int x, int y) {
-	}
+  static class IDW {
+    private double numerator = 0.0, weights = 0.0;
+    private final Point point;
 
-	public record FileSegment(long start, long end) {
-	}
+    public IDW(Point point) {
+      super();
+      this.point = point;
+    }
 
-	static class IDW {
-		private double numerator, weights;
-		private Point point;
+    public void calculateIDW(Point pointReaded, double valueReaded) {
+      double distance = this.point.distanceTo(pointReaded);
+      double weight = 1.0 / Math.pow(distance, POWER);
 
-		public IDW(Point point) {
-			super();
-			this.point = point;
-			this.setNumerator(0);
-			this.setWeights(0);
-		}
+      synchronized (this) {
+        this.numerator += (valueReaded * weight);
+        this.weights += weight;
+      }
+    }
 
-		public double getDistance(Point p, Point q) {
-			return Math.hypot(p.x() - q.x(), p.y() - q.y());
-		}
+    public double getIDW() {
+      return this.numerator / this.weights;
+    }
+  }
 
-		public void calculateIDW(Point pointReaded, double valueReaded) {
-			double distance = getDistance(pointReaded, this.point);
+  public static List<FileSegment> getFileSegment(FileChannel fileChannel, RandomAccessFile raf,
+      int numberOfThreads) throws IOException {
+    long fileSize = fileChannel.size();
+    long chunkSize = fileSize / numberOfThreads;
+    long lastLocation = 0;
+    List<FileSegment> segments = new ArrayList<>();
 
-			if (distance != 0.0) {
-				double weight = 1.0 / Math.pow(distance, POWER);
-				synchronized (this) {
-					setNumerator(getNumerator() + (valueReaded * weight));
-					setWeights(getWeights() + weight);
-				}
-			}
+    for (int i = 0; i < numberOfThreads; i++) {
+      long startSegment;
+      long endSegment;
 
-		}
+      if (i == 0) {
+        startSegment = 0;
+      } else {
+        lastLocation++;
+        startSegment = lastLocation;
+      }
 
-		public double getIDW() {
-			return getNumerator() / getWeights();
-		}
+      if (i == (numberOfThreads - 1)) {
+        endSegment = fileSize;
+      } else {
+        lastLocation = startSegment + chunkSize;
+        raf.seek(lastLocation);
+        while (raf.read() != '\n') {
+          lastLocation++;
+        }
+        lastLocation++;
+        endSegment = lastLocation;
+      }
 
-		public double getNumerator() {
-			return numerator;
-		}
+      segments.add(new FileSegment(startSegment, endSegment));
+    }
 
-		public void setNumerator(double numerator) {
-			this.numerator = numerator;
-		}
+    return segments;
+  }
 
-		public double getWeights() {
-			return weights;
-		}
+  public static void processLine(StringBuilder line, IDW idwCalculator) {
+    int endNumber1 = line.indexOf(",");
+    int endNumber2 = line.indexOf(",", endNumber1 + 1);
+    int lineX = Integer.parseInt(line.substring(0, endNumber1));
+    int lineY = Integer.parseInt(line.substring(endNumber1 + 1, endNumber2));
+    double lineValue = Double.parseDouble(line.substring(endNumber2 + 1));
+    Point pointReaded = new Point(lineX, lineY);
 
-		public void setWeights(double weights) {
-			this.weights = weights;
-		}
-	}
+    idwCalculator.calculateIDW(pointReaded, lineValue);
+  }
 
-	public static List<FileSegment> getFileSegment(FileChannel fileChannel, RandomAccessFile raf, int numberOfThreads)
-			throws IOException {
-		long fileSize = fileChannel.size();
-		long chunkSize = fileSize / numberOfThreads;
-		long lastLocation = 0;
-		List<FileSegment> segments = new ArrayList<>();
+  public static void main(String[] args) throws IOException, InterruptedException {
+    long start = System.currentTimeMillis();
+    int x = 0, y = 0;
+    int numberOfThreads = Runtime.getRuntime().availableProcessors();
+    final CountDownLatch controller = new CountDownLatch(numberOfThreads);
 
-		for (int i = 0; i < numberOfThreads; i++) {
-			long startSegment;
-			long endSegment;
+    try {
+      x = Integer.parseInt(args[0]);
+      y = Integer.parseInt(args[1]);
+    } catch (NumberFormatException e) {
+      System.out.println("Coordenadas inválidas.");
+      System.exit(1);
+    }
 
-			if (i == 0) {
-				startSegment = 0;
-			} else {
-				lastLocation++;
-				startSegment = lastLocation;
-			}
+    Point point = new Point(x, y);
 
-			if (i == (numberOfThreads - 1)) {
-				endSegment = fileSize;
-			} else {
-				lastLocation = startSegment + chunkSize;
-				raf.seek(lastLocation);
-				while (raf.read() != '\n') {
-					lastLocation++;
-				}
-				lastLocation++;
-				endSegment = lastLocation;
-			}
+    try (RandomAccessFile raf = new RandomAccessFile(FILE, "r")) {
+      FileChannel fileChannel = raf.getChannel();
+      List<FileSegment> segments = getFileSegment(fileChannel, raf, numberOfThreads);
+      IDW idwCalculator = new IDW(point);
 
-			segments.add(new FileSegment(startSegment, endSegment));
-		}
+      segments.forEach(segment -> {
+        int segmentIndex = segments.indexOf(segment);
+        try {
+          MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(),
+              segment.end() - segment.start());
+          Runnable runnable = new Runnable() {
+            public void run() {
+              StringBuilder lineBuilder = new StringBuilder();
 
-		return segments;
-	}
+              while (buffer.hasRemaining()) {
+                char c = (char) buffer.get();
 
-	public static void main(String[] args) throws IOException, InterruptedException {
-		int x = 0, y = 0;
-		int numberOfThreads = Runtime.getRuntime().availableProcessors();
-		final CountDownLatch controller = new CountDownLatch(numberOfThreads);
+                if (c == '\n') {
+                  processLine(lineBuilder, idwCalculator);
+                  lineBuilder.delete(0, lineBuilder.length());
+                } else {
+                  lineBuilder.append(c);
+                }
+              }
 
-		try {
-			x = Integer.parseInt(args[0]);
-			y = Integer.parseInt(args[1]);
-		} catch (NumberFormatException e) {
-			System.out.println("Coordenadas inválidas.");
-			System.exit(1);
-		}
+              controller.countDown();
+            }
+          };
+          Thread.ofVirtual().name("Thread " + segmentIndex).start(runnable);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      });
 
-		Point point = new Point(x, y);
+      controller.await();
 
-		try (RandomAccessFile raf = new RandomAccessFile(FILE, "r")) {
-			FileChannel fileChannel = raf.getChannel();
-			List<FileSegment> segments = getFileSegment(fileChannel, raf, numberOfThreads);
-			IDW idwCalculator = new IDW(point);
+      double idw = idwCalculator.getIDW();
+      System.out.println("IDW: " + String.format("%.1f", idw).replace(',', '.'));
 
-			segments.forEach(segment -> {
-				MappedByteBuffer buffer;
-				try {
-					buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(),
-							segment.end() - segment.start());
-					Runnable runnable = new Runnable() {
-						public void run() {
-							StringBuilder lineBuilder = new StringBuilder();
-
-							while (buffer.hasRemaining()) {
-								char c = (char) buffer.get();
-
-								if (c == '\n') {
-									int endNumber1 = lineBuilder.indexOf(",");
-									int endNumber2 = lineBuilder.indexOf(",", endNumber1 + 1);
-									int lineX = Integer.parseInt(lineBuilder.substring(0, endNumber1));
-									int lineY = Integer.parseInt(lineBuilder.substring(endNumber1 + 1, endNumber2));
-									double lineValue = Double.parseDouble(lineBuilder.substring(endNumber2 + 1));
-									Point pointReaded = new Point(lineX, lineY);
-
-									idwCalculator.calculateIDW(pointReaded, lineValue);
-
-									lineBuilder.delete(0, lineBuilder.length());
-								} else {
-									lineBuilder.append(c);
-								}
-							}
-
-							controller.countDown();
-						}
-					};
-					Thread thread = Thread.ofVirtual().name("Thread", 1).start(runnable);
-					thread.join();
-				} catch (IOException | InterruptedException e) {
-					e.printStackTrace();
-				}
-			});
-
-			controller.await();
-			double idw = idwCalculator.getIDW();
-
-			System.out.println("IDW: " + String.format(Locale.US, "%.1f", idw));
-		}
-	}
+      long end = System.currentTimeMillis();
+      long time = (end - start) / 1000;
+      System.out.println("Executed in " + time + "s.");
+      System.exit(0);
+    }
+  }
 }

@@ -7,6 +7,8 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import records.FileSegment;
+import records.Point;
 
 // Versão 1: Platform threads
 
@@ -14,21 +16,6 @@ public class IDWInterpolationV1 {
   private static final String FILE = "./data/measurements.txt";
 
   private static final int POWER = 2;
-
-  public record Point(int x, int y) {
-    public boolean equalsTo(Point otherPoint) {
-      return this.x == otherPoint.x && this.y == otherPoint.y;
-    }
-
-    public double distanceTo(Point otherPoint) {
-      double dx = this.x - otherPoint.x;
-      double dy = this.y - otherPoint.y;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-  }
-
-  public record FileSegment(long start, long end) {
-  }
 
   static class IDW {
     private double numerator = 0.0, weights = 0.0;
