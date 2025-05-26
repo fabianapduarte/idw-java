@@ -4,9 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+// Versão serial - Sem otimização
 
 public class IDWInterpolationSerial {
   private static final String FILE = "./data/measurements.txt";
@@ -41,6 +42,7 @@ public class IDWInterpolationSerial {
   }
 
   public static void main(String[] args) throws IOException {
+    long start = System.currentTimeMillis();
     int x = 0, y = 0;
 
     try {
@@ -63,7 +65,11 @@ public class IDWInterpolationSerial {
     Point point = new Point(x, y);
 
     double idw = calculateInverseDistanceWeighting(mapPoints, POWER, point);
+    System.out.println("IDW: " + String.format("%.1f", idw).replace(',', '.'));
 
-    System.out.println("IDW: " + String.format(Locale.US, "%.1f", idw));
+    long end = System.currentTimeMillis();
+    long time = (end - start) / 1000;
+    System.out.println("Executed in " + time + "s.");
+    System.exit(0);
   }
 }
