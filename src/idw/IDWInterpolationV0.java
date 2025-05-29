@@ -6,7 +6,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import records.Point;
 
-// Versão 0: Otimização do código
+// Versão 0: Serial com otimização do código
 
 public class IDWInterpolationV0 {
   private static final String FILE = "./data/measurements.txt";

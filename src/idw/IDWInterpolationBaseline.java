@@ -7,9 +7,9 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// Versão serial - Sem otimização
+// Versão baseline: Serial e sem otimização
 
-public class IDWInterpolationSerial {
+public class IDWInterpolationBaseline {
   private static final String FILE = "./data/measurements.txt";
 
   private static final int POWER = 2;

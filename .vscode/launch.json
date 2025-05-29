@@ -12,13 +12,13 @@
     },
     {
       "type": "java",
-      "name": "IDWInterpolationSerial",
+      "name": "IDWInterpolationBaseline",
       "request": "launch",
-      "mainClass": "idw/idw.IDWInterpolationSerial",
+      "mainClass": "idw/idw.IDWInterpolationBaseline",
       "projectName": "idw",
       "args": ["1", "1"],
       "console": "internalConsole",
-      "vmArgs": "-Xmx4096m -XX:StartFlightRecording=duration=90s,filename=profiler/idw-serial.jfr"
+      "vmArgs": "-Xmx4096m -XX:StartFlightRecording=duration=600s,filename=profiler/idw-baseline.jfr"
     },
     {
       "type": "java",
