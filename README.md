@@ -5,7 +5,7 @@
 <p align="center">
   <a href="#-sobre-o-projeto">Sobre</a> •
   <a href="#-como-executar-o-projeto">Como executar</a> • 
-  <a href="#-versoes-do-algoritmo">Versões do algoritmo</a> • 
+  <a href="#-versões-do-algoritmo">Versões do algoritmo</a> • 
   <a href="#-profiler">Profiler</a>
 </p>
 
@@ -72,6 +72,6 @@ $ java -XX:StartFlightRecording=duration=90s,filename=profiler/v0/idw-v0-g1.jfr 
 
 ## 📈 Profiler
 
-Para cada versão implementada em Java, foram realizados o monitoramento de tempo de execução, uso da memória, threads, métodos mais utilizados e ação do Garbage Collector utilizando as ferramentas Java Flight Recorder (JFR) e JDK Mission Control (JMC). Além disso, as análises foram feitas com os seguintes coletores de lixo: G1, Serial, Parallel e ZGC.
+Para cada versão implementada em Java, foram gerados arquivos de profiling utilizando as ferramentas Java Flight Recorder (JFR) e JDK Mission Control (JMC). Além disso, as análises foram geradas para os seguintes coletores de lixo: G1, Serial, Parallel e ZGC.
 
 Para visualizar os resultados, instale o JDK Mission Control e abra os arquivos de profiling presentes na pasta profiler.
