@@ -13,7 +13,7 @@
 
 ## 💻 Sobre o projeto
 
-Projeto desenvolvido na disciplina Programação Concorrente do curso de Tecnologia da Informação (IMD/UFRN) implementando o algortimo de interpolação espacial.
+Projeto desenvolvido na disciplina Programação Concorrente do curso de Tecnologia da Informação (IMD/UFRN) implementando o algortimo de interpolação espacial para previsão de temperatura.
 
 A interpolação espacial é o processo de estimativa de valores desconhecidos em determinados pontos do espaço com base em informações conhecidas do ambiente. Os dados utilizados por essa técnica consistem em um conjunto de coordenadas espaciais, cada uma com um ou mais valores associados, como temperatura e precipitação, por exemplo.
 
