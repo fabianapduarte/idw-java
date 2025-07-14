@@ -92,6 +92,46 @@
     },
     {
       "type": "java",
+      "name": "IDWInterpolationV7",
+      "request": "launch",
+      "mainClass": "idw/idw.IDWInterpolationV7",
+      "projectName": "idw",
+      "args": ["1", "1"],
+      "console": "internalConsole",
+      "vmArgs": "-XX:StartFlightRecording=duration=90s,filename=profiler/v7/idw-v7-g1.jfr"
+    },
+    {
+      "type": "java",
+      "name": "IDWInterpolationV8",
+      "request": "launch",
+      "mainClass": "idw/idw.IDWInterpolationV8",
+      "projectName": "idw",
+      "args": ["1", "1"],
+      "console": "internalConsole",
+      "vmArgs": "-XX:StartFlightRecording=duration=90s,filename=profiler/v8/idw-v8-g1.jfr"
+    },
+    {
+      "type": "java",
+      "name": "IDWInterpolationV9",
+      "request": "launch",
+      "mainClass": "idw/idw.IDWInterpolationV9",
+      "projectName": "idw",
+      "args": ["1", "1"],
+      "console": "internalConsole",
+      "vmArgs": "-XX:StartFlightRecording=duration=90s,filename=profiler/v9/idw-v9-g1.jfr"
+    },
+    {
+      "type": "java",
+      "name": "IDWInterpolationV10",
+      "request": "launch",
+      "mainClass": "idw/idw.IDWInterpolationV10",
+      "projectName": "idw",
+      "args": ["1", "1"],
+      "console": "internalConsole",
+      "vmArgs": "-XX:StartFlightRecording=duration=90s,filename=profiler/v10/idw-v10-g1.jfr"
+    },
+    {
+      "type": "java",
       "name": "GenerateData",
       "request": "launch",
       "mainClass": "idw/utils.GenerateData",
