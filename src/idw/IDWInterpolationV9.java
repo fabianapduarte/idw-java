@@ -12,33 +12,32 @@ import records.Point;
 // Versão 9: Parallel streams
 // Criada a partir da versão 8
 
-class IDW {
-  private static final int POWER = 2;
-  private final DoubleAdder numerator = new DoubleAdder();
-  private final DoubleAdder weights = new DoubleAdder();
-  private final Point point;
-
-  public IDW(Point point) {
-    super();
-    this.point = point;
-  }
-
-  public void calculateIDW(Point pointReaded, double valueReaded) {
-    double distance = this.point.distanceTo(pointReaded);
-    double weight = 1.0 / Math.pow(distance, POWER);
-
-    this.numerator.add(valueReaded * weight);
-    this.weights.add(weight);
-  }
-
-  public double getIDW() {
-    return this.numerator.sum() / this.weights.sum();
-  }
-}
-
-
 public class IDWInterpolationV9 {
   private static final String FILE = "./data/measurements.txt";
+
+  static class IDW {
+    private static final int POWER = 2;
+    private final DoubleAdder numerator = new DoubleAdder();
+    private final DoubleAdder weights = new DoubleAdder();
+    private final Point point;
+
+    public IDW(Point point) {
+      super();
+      this.point = point;
+    }
+
+    public void calculateIDW(Point pointReaded, double valueReaded) {
+      double distance = this.point.distanceTo(pointReaded);
+      double weight = 1.0 / Math.pow(distance, POWER);
+
+      this.numerator.add(valueReaded * weight);
+      this.weights.add(weight);
+    }
+
+    public double getIDW() {
+      return this.numerator.sum() / this.weights.sum();
+    }
+  }
 
   public static void processLines(List<String> lines, IDW idwCalculator) {
     lines.parallelStream().forEach(line -> {
