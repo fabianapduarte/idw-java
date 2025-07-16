@@ -118,23 +118,20 @@ public class IDWInterpolationV7 {
           tasks.add((Callable<Void>) () -> {
             try {
               long size = segment.end() - segment.start();
-              MappedByteBuffer buffer =
-                  fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(), size);
+              MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(), size);
 
-              executor.submit(() -> {
-                StringBuilder lineBuilder = new StringBuilder();
+              StringBuilder lineBuilder = new StringBuilder();
 
-                while (buffer.hasRemaining()) {
-                  char c = (char) buffer.get();
+              while (buffer.hasRemaining()) {
+                char c = (char) buffer.get();
 
-                  if (c == '\n') {
-                    processLine(lineBuilder, idwCalculator);
-                    lineBuilder.delete(0, lineBuilder.length());
-                  } else {
-                    lineBuilder.append(c);
-                  }
+                if (c == '\n') {
+                  processLine(lineBuilder, idwCalculator);
+                  lineBuilder.delete(0, lineBuilder.length());
+                } else {
+                  lineBuilder.append(c);
                 }
-              });
+              }
             } catch (IOException e) {
               e.printStackTrace();
             }
