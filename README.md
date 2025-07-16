@@ -59,14 +59,18 @@ $ java -XX:StartFlightRecording=duration=90s,filename=profiler/v0/idw-v0-g1.jfr 
 
 ## 🗂 Versões do algoritmo
 
-- `IDWInterpolationBaseline`: Versão serial e não otimizada do algoritmo;
-- `IDWInterpolationV0`: Versão serial com otimizações para melhorar uso de memória;
-- `IDWInterpolationV1`: Versão com paralelismo usando platform threads (sem tratamento de condição de corrida);
-- `IDWInterpolationV2`: Versão com paralelismo usando virtual threads (sem tratamento de condição de corrida);
-- `IDWInterpolationV3`: Versão com paralelismo usando platform threads e mutex;
-- `IDWInterpolationV4`: Versão com paralelismo usando platform threads e variáveis atômicas;
-- `IDWInterpolationV5`: Versão com paralelismo usando platform threads e `ReentrantLock` injusto;
-- `IDWInterpolationV6`: Versão com paralelismo usando platform threads e `ReentrantLock` justo.
+- `IDWInterpolationBaseline`: Serial e não otimizada do algoritmo;
+- `IDWInterpolationV0`: Serial com otimizações para melhorar uso de memória;
+- `IDWInterpolationV1`: Paralelismo usando platform threads (sem tratamento de condição de corrida);
+- `IDWInterpolationV2`: Paralelismo usando virtual threads (sem tratamento de condição de corrida);
+- `IDWInterpolationV3`: Paralelismo usando platform threads e mutex;
+- `IDWInterpolationV4`: Paralelismo usando platform threads e variáveis atômicas;
+- `IDWInterpolationV5`: Paralelismo usando platform threads e `ReentrantLock` injusto;
+- `IDWInterpolationV6`: Paralelismo usando platform threads e `ReentrantLock` justo;
+- `IDWInterpolationV7`: Executor Framework, Callable e Future;
+- `IDWInterpolationV8`: Fork/Join;
+- `IDWInterpolationV9`: Parallel Streams;
+- `IDWInterpolationV10`: Completable Future.
 
 ---
 
