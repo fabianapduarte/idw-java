@@ -6,12 +6,13 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.DoubleAdder;
 import records.FileSegment;
 import records.Point;
 
-// Versão 10: Parallel streams
-// Criado a partir da versão 4
+// Versão 10: CompletableFuture
+// Criado a partir da versão 7
 
 public class IDWInterpolationV10 {
   private static final String FILE = "./data/measurements.txt";
@@ -34,15 +35,10 @@ public class IDWInterpolationV10 {
 
       this.numerator.add(valueReaded * weight);
       this.weights.add(weight);
-
     }
 
     public double getIDW() {
       return this.numerator.sum() / this.weights.sum();
-    }
-
-    public DoubleAdder getWeights() {
-      return weights;
     }
   }
 
@@ -113,26 +109,36 @@ public class IDWInterpolationV10 {
       List<FileSegment> segments = getFileSegment(fileChannel, raf, numberOfThreads);
       IDW idwCalculator = new IDW(point);
 
-      segments.parallelStream().forEach(segment -> {
-        try {
-          MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(),
-              segment.end() - segment.start());
-          StringBuilder lineBuilder = new StringBuilder();
+      List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-          while (buffer.hasRemaining()) {
-            char c = (char) buffer.get();
+      segments.forEach((FileSegment segment) -> {
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+          try {
+            long size = segment.end() - segment.start();
+            MappedByteBuffer buffer =
+                fileChannel.map(FileChannel.MapMode.READ_ONLY, segment.start(), size);
 
-            if (c == '\n') {
-              processLine(lineBuilder, idwCalculator);
-              lineBuilder.delete(0, lineBuilder.length());
-            } else {
-              lineBuilder.append(c);
+            StringBuilder lineBuilder = new StringBuilder();
+
+            while (buffer.hasRemaining()) {
+              char c = (char) buffer.get();
+
+              if (c == '\n') {
+                processLine(lineBuilder, idwCalculator);
+                lineBuilder.delete(0, lineBuilder.length());
+              } else {
+                lineBuilder.append(c);
+              }
             }
+          } catch (IOException e) {
+            e.printStackTrace();
           }
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+        });
+
+        futures.add(future);
       });
+
+      CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
       double idw = idwCalculator.getIDW();
       System.out.println("IDW: " + String.format("%.1f", idw).replace(',', '.'));

@@ -132,16 +132,6 @@
     },
     {
       "type": "java",
-      "name": "IDWInterpolationV11",
-      "request": "launch",
-      "mainClass": "idw/idw.IDWInterpolationV11",
-      "projectName": "idw",
-      "args": ["1", "1"],
-      "console": "internalConsole",
-      "vmArgs": "-XX:StartFlightRecording=duration=90s,filename=profiler/v11/idw-v11-g1.jfr"
-    },
-    {
-      "type": "java",
       "name": "GenerateData",
       "request": "launch",
       "mainClass": "idw/utils.GenerateData",
